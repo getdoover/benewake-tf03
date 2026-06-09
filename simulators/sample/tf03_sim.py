@@ -72,7 +72,7 @@ if __name__ == "__main__":
     sim = TF03Sim(
         os.environ.get("MODBUS_HOST", "0.0.0.0"),
         int(os.environ.get("MODBUS_PORT", 5020)),
-        int(os.environ.get("MIN_CM", 100)),     # 1 m
-        int(os.environ.get("MAX_CM", 5000)),    # 50 m
+        int(os.environ.get("MIN_CM", 100)),  # 1 m
+        int(os.environ.get("MAX_CM", 5000)),  # 50 m
     )
     asyncio.run(sim.run())
