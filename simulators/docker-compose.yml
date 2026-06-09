@@ -1,0 +1,17 @@
+services:
+  benewake_tf03:
+    build: ..
+    restart: always
+    network_mode: host
+    environment:
+      - APP_KEY=${APP_KEY}
+
+  # Optional: a Modbus-TCP TF03 simulator for testing without hardware.
+  # Point the app's modbus_config at it with bus_type: tcp, tcp_uri: 127.0.0.1:5020.
+  tf03_sim:
+    build: ./sample
+    restart: always
+    network_mode: host
+    environment:
+      - MODBUS_HOST=0.0.0.0
+      - MODBUS_PORT=5020

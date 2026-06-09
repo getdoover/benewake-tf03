@@ -1,0 +1,20 @@
+{
+    "sensor_name": "TF03 LiDAR (sim)",
+    "modbus_id": 1,
+    "mounting_offset_m": 0.0,
+    "min_signal_strength": 40,
+    "max_valid_distance_m": 100.0,
+    "modbus_config": {
+        "bus_type": "tcp",
+        "name": "default",
+        "tcp_uri": "127.0.0.1:5020",
+        "tcp_timeout": 2.0,
+        "serial_port": "/dev/ttyS0",
+        "serial_baud": 115200,
+        "serial_method": "rtu",
+        "serial_data_bits": 8,
+        "serial_parity": "None",
+        "serial_stop_bits": 1,
+        "serial_timeout": 0.3
+    }
+}
