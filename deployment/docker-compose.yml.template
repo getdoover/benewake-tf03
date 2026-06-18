@@ -1,0 +1,11 @@
+services:
+  benewake_tf03:
+    image: ghcr.io/getdoover/benewake-tf03:main
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - APP_KEY=$APP_KEY
+      - HEALTHCHECK_PORT=$HEALTHCHECK_PORT
+    devices:
+      # we could mount the whole /dev, but this is probably better practice
+      - {{serial_port}}:{{serial_port}}:rw
