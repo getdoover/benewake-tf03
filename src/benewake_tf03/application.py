@@ -22,6 +22,10 @@ NUM_REGS = 2  # read distance + strength in one transaction
 # over-range threshold value rather than a real distance. Default is 18000 cm.
 OVER_RANGE_CM = 18000
 
+# Upper bound on the configurable update rate. The sensor streams at 100 Hz, but
+# the Doover client can't keep up much past this, so we cap it.
+MAX_UPDATE_RATE_HZ = 100
+
 
 class BenewakeTF03(Application):
     config: BenewakeTF03Config
@@ -32,17 +36,16 @@ class BenewakeTF03(Application):
     tags_cls = BenewakeTF03Tags
     ui_cls = BenewakeTF03UI
 
-    loop_target_period = 2  # seconds between sensor reads
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    async def setup(self):
         # Last good reading: (distance_cm, signal_strength, timestamp)
         self.last_reading: tuple[int, int, float] | None = None
         self.comms_mode = "serial"
         self.serial_reader: SerialReader | None = None
 
-    async def setup(self):
         self.state = TF03State()
+
+        # Set how fast the main loop samples the latest frame and publishes tags.
+        self.loop_target_period = self._loop_period_from_config()
 
         self.comms_mode = self.config.comms_mode.value
         if self.comms_mode == "serial":
@@ -69,6 +72,19 @@ class BenewakeTF03(Application):
         if self.serial_reader is not None:
             self.serial_reader.stop()
         await super().close()
+
+    def _loop_period_from_config(self) -> float:
+        """Main-loop period (seconds) from the configured update rate in Hz."""
+        freq = self.config.update_rate_hz.value
+        if not freq or freq <= 0:
+            return 1.0
+        if freq > MAX_UPDATE_RATE_HZ:
+            log.warning(
+                f"Update Rate {freq} Hz exceeds the {MAX_UPDATE_RATE_HZ} Hz max; "
+                f"capping to {MAX_UPDATE_RATE_HZ} Hz"
+            )
+            freq = MAX_UPDATE_RATE_HZ
+        return 1 / freq
 
     async def main_loop(self):
         await self.read_sensor()

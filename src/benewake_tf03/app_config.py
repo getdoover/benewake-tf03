@@ -60,6 +60,17 @@ class BenewakeTF03Config(config.Schema):
         ),
     )
 
+    update_rate_hz = config.Number(
+        "Update Rate Hz",
+        default=1.0,
+        description=(
+            "How often the app samples the latest reading and updates the tags "
+            "and UI, in Hz. The TF03 streams at 100 Hz, so this is limited only "
+            "by the Doover client - up to ~20 Hz works well for live mode. "
+            "Higher values are capped at 20 Hz."
+        ),
+    )
+
     mounting_offset_m = config.Number(
         "Mounting Offset Metres",
         default=0.0,

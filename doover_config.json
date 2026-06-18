@@ -98,6 +98,19 @@
                     "default": 1,
                     "x-position": 4
                 },
+                "update_rate_hz": {
+                    "title": "Update Rate Hz",
+                    "x-name": "update_rate_hz",
+                    "x-hidden": false,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "How often the app samples the latest reading and updates the tags and UI, in Hz. The TF03 streams at 100 Hz, so this is limited only by the Doover client - up to ~20 Hz works well for live mode. Higher values are capped at 20 Hz.",
+                    "default": 1.0,
+                    "x-position": 5
+                },
                 "mounting_offset_metres": {
                     "title": "Mounting Offset Metres",
                     "x-name": "mounting_offset_metres",
@@ -109,7 +122,7 @@
                     "x-required": false,
                     "description": "Added to the raw measured distance for calibration (e.g. sensor recess or known bias). Usually 0.",
                     "default": 0.0,
-                    "x-position": 5
+                    "x-position": 6
                 },
                 "minimum_signal_strength": {
                     "title": "Minimum Signal Strength",
@@ -122,7 +135,7 @@
                     "x-required": false,
                     "description": "Readings with signal strength below this are flagged as unreliable. The TF03 datasheet threshold is 40.",
                     "default": 40,
-                    "x-position": 6
+                    "x-position": 7
                 },
                 "maximum_valid_distance_metres": {
                     "title": "Maximum Valid Distance Metres",
@@ -135,7 +148,7 @@
                     "x-required": false,
                     "description": "Distances above this are treated as 'no target' / over-range. The TF03-100 measuring range is 100 m.",
                     "default": 100.0,
-                    "x-position": 7
+                    "x-position": 8
                 },
                 "modbus_config": {
                     "title": "Modbus Config",
@@ -143,7 +156,7 @@
                     "x-hidden": false,
                     "type": "object",
                     "x-required": true,
-                    "x-position": 8,
+                    "x-position": 9,
                     "properties": {
                         "bus_type": {
                             "enum": [
@@ -309,7 +322,7 @@
                     "x-required": false,
                     "description": "Position of Application in UI Structure. Smaller numbers are closer to the top.",
                     "default": 100,
-                    "x-position": 9,
+                    "x-position": 10,
                     "minimum": 0
                 }
             },
