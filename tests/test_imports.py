@@ -12,8 +12,11 @@ def test_config():
 
     config = BenewakeTF03Config()
     assert isinstance(config.to_dict(), dict)
-    # The TF03 RS485 interface defaults to 115200 baud.
-    assert config.modbus_config.serial_baud.default == 115200
+    # Defaults to the sensor's native serial streaming mode (no Modbus setup).
+    assert config.comms_mode.default == "serial"
+    # The TF03 RS485 interface defaults to 115200 baud in both modes.
+    assert config.serial_baud.default == 115200
+    assert config.modbus_settings.serial_baud.default == 115200
 
 
 def test_ui():

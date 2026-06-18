@@ -1,12 +1,13 @@
 [project]
 name = "benewake_tf03"
 version = "0.1.0"
-description = "Read distance from a Benewake TF03-100 RS485 LiDAR over Modbus-RTU and expose it as a tag and on the UI."
+description = "Read distance from a Benewake TF03-100 RS485 LiDAR over native RS485 serial or Modbus-RTU and expose it as a tag and on the UI."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "pydoover>=0.4.17,<1.0",
     "transitions>=0.9.2",
+    "pyserial>=3.5",
 ]
 
 [project.scripts]

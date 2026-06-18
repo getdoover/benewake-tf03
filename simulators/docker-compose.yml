@@ -6,8 +6,19 @@ services:
     environment:
       - APP_KEY=${APP_KEY}
 
-  # Optional: a Modbus-TCP TF03 simulator for testing without hardware.
-  # Point the app's modbus_config at it with bus_type: tcp, tcp_uri: 127.0.0.1:5020.
+  # Native RS485 serial-stream simulator (used by the default serial comms_mode).
+  # The app connects to it via serial_port: socket://127.0.0.1:9600.
+  tf03_serial_sim:
+    build: ./serial_sample
+    restart: always
+    network_mode: host
+    environment:
+      - SERIAL_HOST=0.0.0.0
+      - SERIAL_PORT=9600
+
+  # Optional: a Modbus-TCP TF03 simulator for testing modbus comms_mode.
+  # Switch app_config.json to comms_mode: modbus and point modbus_settings at it
+  # (bus_type: tcp, tcp_uri: 127.0.0.1:5020).
   tf03_sim:
     build: ./sample
     restart: always

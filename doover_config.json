@@ -5,7 +5,7 @@
         "type": "DEV",
         "visibility": "PUB",
         "allow_many": true,
-        "description": "Read distance from a Benewake TF03-100 RS485 LiDAR over Modbus-RTU.",
+        "description": "Read distance from a Benewake TF03-100 RS485 LiDAR over native RS485 serial streaming or Modbus-RTU.",
         "long_description": "README.md",
         "depends_on": [
             "platform_interface",
@@ -37,12 +37,40 @@
                     "description": "Friendly name shown on the dashboard.",
                     "default": "TF03 LiDAR"
                 },
+                "comms_mode": {
+                    "enum": [
+                        "serial",
+                        "modbus"
+                    ],
+                    "title": "Comms Mode",
+                    "x-name": "comms_mode",
+                    "x-hidden": false,
+                    "type": "string",
+                    "description": "How to read the sensor. 'serial' reads the TF03's native RS485/UART streaming output directly (factory default - no sensor setup needed). 'modbus' polls it over Modbus-RTU via the shared modbus_interface (requires Modbus to be enabled on the sensor first).",
+                    "default": "serial"
+                },
+                "serial_port": {
+                    "title": "Serial Port",
+                    "x-name": "serial_port",
+                    "x-hidden": false,
+                    "type": "string",
+                    "description": "(Serial mode) Serial device the TF03 is wired to, e.g. /dev/ttyAMA0, /dev/ttyUSB0. A pyserial URL such as socket://host:port is also accepted (used by the simulator).",
+                    "default": "/dev/ttyAMA0"
+                },
+                "serial_baud": {
+                    "title": "Serial Baud",
+                    "x-name": "serial_baud",
+                    "x-hidden": false,
+                    "type": "integer",
+                    "description": "(Serial mode) Baud rate of the TF03 serial stream. Factory default is 115200 (8 data bits, no parity, 1 stop bit).",
+                    "default": 115200
+                },
                 "modbus_address": {
                     "title": "Modbus Address",
                     "x-name": "modbus_address",
                     "x-hidden": false,
                     "type": "integer",
-                    "description": "Modbus/RS485 slave address of the TF03. Factory default is 1. Valid range is 1-247.",
+                    "description": "(Modbus mode) Modbus/RS485 slave address of the TF03. Factory default is 1. Valid range is 1-247.",
                     "default": 1
                 },
                 "mounting_offset_metres": {

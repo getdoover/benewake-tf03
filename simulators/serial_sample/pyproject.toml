@@ -1,0 +1,6 @@
+[project]
+name = "tf03_serial_sim"
+version = "0.1.0"
+description = "Native RS485 serial-stream simulator for a Benewake TF03 LiDAR"
+requires-python = ">=3.11"
+dependencies = []

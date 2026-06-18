@@ -6,6 +6,7 @@ from pydoover.docker import Application
 from .app_config import BenewakeTF03Config
 from .app_state import TF03State
 from .app_ui import BenewakeTF03UI
+from .comms import SerialReader
 
 log = logging.getLogger()
 
@@ -26,15 +27,45 @@ class BenewakeTF03(Application):
 
     loop_target_period = 2  # seconds between sensor reads
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Last good reading: (distance_cm, signal_strength, timestamp)
+        self.last_reading: tuple[int, int, float] | None = None
+        self.comms_mode = "serial"
+        self.serial_reader: SerialReader | None = None
+
     async def setup(self):
         self.ui = BenewakeTF03UI(self.config)
         self.state = TF03State()
 
-        # Last good reading: (distance_cm, signal_strength, timestamp)
-        self.last_reading: tuple[int, int, float] | None = None
+        self.comms_mode = self.config.comms_mode.value
+        if self.comms_mode == "serial":
+            # Read the TF03's native streaming output straight off the serial port.
+            self.serial_reader = SerialReader(
+                self.config.serial_port.value,
+                self.config.serial_baud.value,
+            )
+            self.serial_reader.start()
+            log.info(
+                f"TF03 in SERIAL mode on {self.config.serial_port.value} "
+                f"@ {self.config.serial_baud.value} baud"
+            )
+        else:
+            # Modbus mode: hand the bus config to the framework's modbus interface
+            # under the name it auto-opens (`modbus_config`), then open the bus.
+            # We only do this in modbus mode so the serial port is never grabbed
+            # by modbus_interface when running in serial mode.
+            self.config.modbus_config = self.config.modbus_settings
+            await self.modbus_iface.setup()
+            log.info("TF03 in MODBUS mode")
 
         self.ui_manager.add_children(*self.ui.fetch())
         self.ui_manager.set_display_name(self.config.sensor_name.value)
+
+    async def close(self):
+        if self.serial_reader is not None:
+            self.serial_reader.stop()
+        await super().close()
 
     async def main_loop(self):
         await self.read_sensor()
@@ -67,10 +98,35 @@ class BenewakeTF03(Application):
         await self.set_tag("reading_reliable", reliable)
 
     async def read_sensor(self):
-        """Read distance + signal strength from the TF03 over Modbus.
+        """Read distance + signal strength from the TF03.
 
+        Uses the native serial stream or Modbus polling depending on comms_mode.
         Updates the comms state machine and caches the last good reading.
         """
+        if self.comms_mode == "serial":
+            reading = await self.read_serial()
+        else:
+            reading = await self.read_modbus()
+
+        if reading is None:
+            await self.state.register_no_comms()
+            return
+
+        distance_cm, strength = reading
+        log.debug(f"TF03 read: distance={distance_cm} cm, strength={strength}")
+
+        self.last_reading = (distance_cm, strength, time.time())
+        await self.state.register_comms()
+
+    async def read_serial(self) -> tuple[int, int] | None:
+        """Latest (distance_cm, strength) from the native serial stream, or None."""
+        reading = self.serial_reader.read()
+        if reading is None:
+            log.info("No fresh TF03 serial frame")
+        return reading
+
+    async def read_modbus(self) -> tuple[int, int] | None:
+        """Read (distance_cm, strength) over Modbus, or None on failure."""
         result = await self.modbus_iface.read_registers_async(
             modbus_id=self.config.modbus_id.value,
             start_address=REG_DISTANCE,
@@ -80,11 +136,6 @@ class BenewakeTF03(Application):
 
         if not result or len(result) < NUM_REGS:
             log.info("Failed to read from TF03 (no/short Modbus response)")
-            await self.state.register_no_comms()
-            return
+            return None
 
-        distance_cm, strength = int(result[0]), int(result[1])
-        log.debug(f"TF03 read: distance={distance_cm} cm, strength={strength}")
-
-        self.last_reading = (distance_cm, strength, time.time())
-        await self.state.register_comms()
+        return int(result[0]), int(result[1])
