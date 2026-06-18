@@ -26,16 +26,21 @@
         "config_schema": {
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             "$id": "",
-            "title": "Application Config",
+            "title": "$default",
             "type": "object",
             "properties": {
                 "sensor_name": {
                     "title": "Sensor Name",
                     "x-name": "sensor_name",
                     "x-hidden": false,
-                    "type": "string",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "x-required": false,
                     "description": "Friendly name shown on the dashboard.",
-                    "default": "TF03 LiDAR"
+                    "default": "TF03 LiDAR",
+                    "x-position": 0
                 },
                 "comms_mode": {
                     "enum": [
@@ -45,63 +50,100 @@
                     "title": "Comms Mode",
                     "x-name": "comms_mode",
                     "x-hidden": false,
-                    "type": "string",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "x-required": false,
                     "description": "How to read the sensor. 'serial' reads the TF03's native RS485/UART streaming output directly (factory default - no sensor setup needed). 'modbus' polls it over Modbus-RTU via the shared modbus_interface (requires Modbus to be enabled on the sensor first).",
-                    "default": "serial"
+                    "default": "serial",
+                    "x-position": 1
                 },
                 "serial_port": {
                     "title": "Serial Port",
                     "x-name": "serial_port",
                     "x-hidden": false,
-                    "type": "string",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "x-required": false,
                     "description": "(Serial mode) Serial device the TF03 is wired to, e.g. /dev/ttyAMA0, /dev/ttyUSB0. A pyserial URL such as socket://host:port is also accepted (used by the simulator).",
-                    "default": "/dev/ttyAMA0"
+                    "default": "/dev/ttyAMA0",
+                    "x-position": 2
                 },
                 "serial_baud": {
                     "title": "Serial Baud",
                     "x-name": "serial_baud",
                     "x-hidden": false,
-                    "type": "integer",
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "x-required": false,
                     "description": "(Serial mode) Baud rate of the TF03 serial stream. Factory default is 115200 (8 data bits, no parity, 1 stop bit).",
-                    "default": 115200
+                    "default": 115200,
+                    "x-position": 3
                 },
                 "modbus_address": {
                     "title": "Modbus Address",
                     "x-name": "modbus_address",
                     "x-hidden": false,
-                    "type": "integer",
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "x-required": false,
                     "description": "(Modbus mode) Modbus/RS485 slave address of the TF03. Factory default is 1. Valid range is 1-247.",
-                    "default": 1
+                    "default": 1,
+                    "x-position": 4
                 },
                 "mounting_offset_metres": {
                     "title": "Mounting Offset Metres",
                     "x-name": "mounting_offset_metres",
                     "x-hidden": false,
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "x-required": false,
                     "description": "Added to the raw measured distance for calibration (e.g. sensor recess or known bias). Usually 0.",
-                    "default": 0.0
+                    "default": 0.0,
+                    "x-position": 5
                 },
                 "minimum_signal_strength": {
                     "title": "Minimum Signal Strength",
                     "x-name": "minimum_signal_strength",
                     "x-hidden": false,
-                    "type": "integer",
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "x-required": false,
                     "description": "Readings with signal strength below this are flagged as unreliable. The TF03 datasheet threshold is 40.",
-                    "default": 40
+                    "default": 40,
+                    "x-position": 6
                 },
                 "maximum_valid_distance_metres": {
                     "title": "Maximum Valid Distance Metres",
                     "x-name": "maximum_valid_distance_metres",
                     "x-hidden": false,
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "x-required": false,
                     "description": "Distances above this are treated as 'no target' / over-range. The TF03-100 measuring range is 100 m.",
-                    "default": 100.0
+                    "default": 100.0,
+                    "x-position": 7
                 },
                 "modbus_config": {
                     "title": "Modbus Config",
                     "x-name": "modbus_config",
                     "x-hidden": false,
                     "type": "object",
+                    "x-required": true,
+                    "x-position": 8,
                     "properties": {
                         "bus_type": {
                             "enum": [
@@ -111,29 +153,49 @@
                             "title": "Bus Type",
                             "x-name": "bus_type",
                             "x-hidden": false,
-                            "type": "string",
-                            "default": "serial"
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "x-required": false,
+                            "default": "serial",
+                            "x-position": 1
                         },
                         "name": {
                             "title": "Name",
                             "x-name": "name",
                             "x-hidden": false,
-                            "type": "string",
-                            "default": "default"
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "x-required": false,
+                            "default": "default",
+                            "x-position": 2
                         },
                         "serial_port": {
                             "title": "Serial Port",
                             "x-name": "serial_port",
                             "x-hidden": false,
-                            "type": "string",
-                            "default": "/dev/ttyAMA0"
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "x-required": false,
+                            "default": "/dev/ttyAMA0",
+                            "x-position": 3
                         },
                         "serial_baud": {
                             "title": "Serial Baud",
                             "x-name": "serial_baud",
                             "x-hidden": false,
-                            "type": "integer",
-                            "default": 115200
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "x-required": false,
+                            "default": 115200,
+                            "x-position": 4
                         },
                         "serial_method": {
                             "enum": [
@@ -145,15 +207,25 @@
                             "title": "Serial Method",
                             "x-name": "serial_method",
                             "x-hidden": false,
-                            "type": "string",
-                            "default": "rtu"
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "x-required": false,
+                            "default": "rtu",
+                            "x-position": 5
                         },
                         "serial_data_bits": {
                             "title": "Serial Data Bits",
                             "x-name": "serial_data_bits",
                             "x-hidden": false,
-                            "type": "integer",
-                            "default": 8
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "x-required": false,
+                            "default": 8,
+                            "x-position": 6
                         },
                         "serial_parity": {
                             "enum": [
@@ -164,40 +236,81 @@
                             "title": "Serial Parity",
                             "x-name": "serial_parity",
                             "x-hidden": false,
-                            "type": "string",
-                            "default": "None"
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "x-required": false,
+                            "default": "None",
+                            "x-position": 7
                         },
                         "serial_stop_bits": {
                             "title": "Serial Stop Bits",
                             "x-name": "serial_stop_bits",
                             "x-hidden": false,
-                            "type": "integer",
-                            "default": 1
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "x-required": false,
+                            "default": 1,
+                            "x-position": 8
                         },
                         "serial_timeout": {
                             "title": "Serial Timeout",
                             "x-name": "serial_timeout",
                             "x-hidden": false,
-                            "type": "number",
-                            "default": 0.3
+                            "type": [
+                                "number",
+                                "null"
+                            ],
+                            "x-required": false,
+                            "default": 0.3,
+                            "x-position": 9
                         },
                         "tcp_uri": {
                             "title": "TCP URI",
                             "x-name": "tcp_uri",
                             "x-hidden": false,
-                            "type": "string",
-                            "default": "127.0.0.1:5000"
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "x-required": false,
+                            "default": "127.0.0.1:5000",
+                            "x-position": 10
                         },
                         "tcp_timeout": {
                             "title": "TCP Timeout",
                             "x-name": "tcp_timeout",
                             "x-hidden": false,
-                            "type": "number",
-                            "default": 2.0
+                            "type": [
+                                "number",
+                                "null"
+                            ],
+                            "x-required": false,
+                            "default": 2.0,
+                            "x-position": 11
                         }
                     },
                     "additionalElements": true,
-                    "required": []
+                    "required": [],
+                    "x-collapsible": true,
+                    "x-defaultCollapsed": false
+                },
+                "dv_app_position": {
+                    "title": "Position",
+                    "x-name": "dv_app_position",
+                    "x-hidden": true,
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Position of Application in UI Structure. Smaller numbers are closer to the top.",
+                    "default": 100,
+                    "x-position": 9,
+                    "minimum": 0
                 }
             },
             "additionalElements": true,
@@ -208,7 +321,108 @@
         "id": 190080456740311054,
         "key": null,
         "code_repo_id": null,
-        "ui_schema": null,
+        "ui_schema": {
+            "displayString": "$config.app().sensor_name",
+            "hidden": "$config.app().hidden:boolean:false:boolean:false",
+            "position": "$config.app().dv_app_position:number:100",
+            "icon": null,
+            "colour": null,
+            "defaultOpen": "$config.app().dv_app_default_open:boolean",
+            "type": "uiApplication",
+            "name": "$config.app().APP_KEY",
+            "children": {
+                "distance": {
+                    "name": "distance",
+                    "type": "uiVariable",
+                    "displayString": "Distance",
+                    "showActivity": true,
+                    "position": 51,
+                    "hidden": false,
+                    "units": "m",
+                    "varType": "float",
+                    "currentValue": "$tag.app().distance_m:number:null",
+                    "decPrecision": 2,
+                    "live": true
+                },
+                "no_communication_with_sensor": {
+                    "name": "no_communication_with_sensor",
+                    "type": "uiWarningIndicator",
+                    "displayString": "No communication with sensor",
+                    "position": 52,
+                    "hidden": "$tag.app().comms_ok:boolean:false",
+                    "currentValue": "$cmds.app().no_communication_with_sensor",
+                    "can_cancel": true
+                },
+                "weak_signal__distance_unreliable": {
+                    "name": "weak_signal__distance_unreliable",
+                    "type": "uiWarningIndicator",
+                    "displayString": "Weak signal - distance unreliable",
+                    "position": 53,
+                    "hidden": "$tag.app().signal_warning_hidden:boolean:true",
+                    "currentValue": "$cmds.app().weak_signal__distance_unreliable",
+                    "can_cancel": true
+                },
+                "sensor_details": {
+                    "name": "sensor_details",
+                    "type": "uiSubmodule",
+                    "displayString": "Sensor Details",
+                    "showActivity": true,
+                    "position": 57,
+                    "hidden": false,
+                    "children": {
+                        "raw_distance": {
+                            "name": "raw_distance",
+                            "type": "uiVariable",
+                            "displayString": "Raw Distance",
+                            "showActivity": true,
+                            "position": 54,
+                            "hidden": false,
+                            "units": "cm",
+                            "varType": "float",
+                            "currentValue": "$tag.app().distance_raw_cm:number:null",
+                            "decPrecision": 0
+                        },
+                        "signal_strength": {
+                            "name": "signal_strength",
+                            "type": "uiVariable",
+                            "displayString": "Signal Strength",
+                            "showActivity": true,
+                            "position": 55,
+                            "hidden": false,
+                            "varType": "float",
+                            "currentValue": "$tag.app().signal_strength:number:null",
+                            "decPrecision": 0,
+                            "ranges": [
+                                {
+                                    "min": 0,
+                                    "max": 40,
+                                    "colour": "yellow",
+                                    "show_on_graph": true,
+                                    "label": "Weak"
+                                },
+                                {
+                                    "min": 40,
+                                    "max": 3500,
+                                    "colour": "green",
+                                    "show_on_graph": true,
+                                    "label": "Good"
+                                }
+                            ]
+                        },
+                        "last_read": {
+                            "name": "last_read",
+                            "type": "uiTimestamp",
+                            "displayString": "Last Read",
+                            "showActivity": true,
+                            "position": 56,
+                            "hidden": false,
+                            "varType": "timestamp",
+                            "currentValue": "$tag.app().last_read:number:null"
+                        }
+                    }
+                }
+            }
+        },
         "icon_url": null,
         "banner_url": null,
         "build_widget_command": null,

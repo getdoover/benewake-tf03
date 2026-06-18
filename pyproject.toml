@@ -5,7 +5,7 @@ description = "Read distance from a Benewake TF03-100 RS485 LiDAR over native RS
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "pydoover>=0.4.17,<1.0",
+    "pydoover>=1.5.0",
     "transitions>=0.9.2",
     "pyserial>=3.5",
 ]
@@ -13,6 +13,7 @@ dependencies = [
 [project.scripts]
 doover-app-run = "benewake_tf03:main"
 export-config = "benewake_tf03.app_config:export"
+export-ui = "benewake_tf03.app_ui:export"
 
 
 [build-system]

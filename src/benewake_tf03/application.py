@@ -5,6 +5,7 @@ from pydoover.docker import Application
 
 from .app_config import BenewakeTF03Config
 from .app_state import TF03State
+from .app_tags import BenewakeTF03Tags
 from .app_ui import BenewakeTF03UI
 from .comms import SerialReader
 
@@ -24,6 +25,12 @@ OVER_RANGE_CM = 18000
 
 class BenewakeTF03(Application):
     config: BenewakeTF03Config
+    tags: BenewakeTF03Tags
+    ui: BenewakeTF03UI
+
+    config_cls = BenewakeTF03Config
+    tags_cls = BenewakeTF03Tags
+    ui_cls = BenewakeTF03UI
 
     loop_target_period = 2  # seconds between sensor reads
 
@@ -35,7 +42,6 @@ class BenewakeTF03(Application):
         self.serial_reader: SerialReader | None = None
 
     async def setup(self):
-        self.ui = BenewakeTF03UI(self.config)
         self.state = TF03State()
 
         self.comms_mode = self.config.comms_mode.value
@@ -59,9 +65,6 @@ class BenewakeTF03(Application):
             await self.modbus_iface.setup()
             log.info("TF03 in MODBUS mode")
 
-        self.ui_manager.add_children(*self.ui.fetch())
-        self.ui_manager.set_display_name(self.config.sensor_name.value)
-
     async def close(self):
         if self.serial_reader is not None:
             self.serial_reader.stop()
@@ -73,9 +76,14 @@ class BenewakeTF03(Application):
 
         if self.state.state == "no_comms" or self.last_reading is None:
             log.warning("No comms with TF03 - clearing reading")
-            self.ui.update_no_comms()
-            await self.set_tag("distance_m", None)
-            await self.set_tag("reading_reliable", False)
+            # Blank the reading and raise the comms warning. The signal warning
+            # stays hidden so it doesn't stack on top of the no-comms warning.
+            await self.tags.distance_m.set(None)
+            await self.tags.distance_raw_cm.set(None)
+            await self.tags.signal_strength.set(None)
+            await self.tags.reading_reliable.set(False)
+            await self.tags.comms_ok.set(False)
+            await self.tags.signal_warning_hidden.set(True)
             return
 
         distance_cm, strength, ts = self.last_reading
@@ -89,13 +97,15 @@ class BenewakeTF03(Application):
             and distance_m <= self.config.max_valid_distance_m.value
         )
 
-        self.ui.update(distance_m, distance_cm, strength, reliable, ts)
-
-        # Publish tags. `distance_m` is the headline value other apps / the cloud read.
-        await self.set_tag("distance_m", distance_m if reliable else None)
-        await self.set_tag("distance_raw_cm", distance_cm)
-        await self.set_tag("signal_strength", strength)
-        await self.set_tag("reading_reliable", reliable)
+        # Publish tags; the UI binds to these. `distance_m` is the headline
+        # value other apps / the cloud read - cleared when unreliable.
+        await self.tags.distance_m.set(distance_m if reliable else None)
+        await self.tags.distance_raw_cm.set(distance_cm)
+        await self.tags.signal_strength.set(strength)
+        await self.tags.reading_reliable.set(reliable)
+        await self.tags.comms_ok.set(True)
+        await self.tags.signal_warning_hidden.set(reliable)
+        await self.tags.last_read.set(int(ts * 1000))
 
     async def read_sensor(self):
         """Read distance + signal strength from the TF03.
