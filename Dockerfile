@@ -1,4 +1,7 @@
 FROM spaneng/doover_device_base AS base_image
+LABEL com.doover.app="true"
+LABEL com.doover.managed="true"
+HEALTHCHECK --interval=30s --timeout=2s --start-period=5s CMD curl -f "127.0.0.1:$HEALTHCHECK_PORT" || exit 1
 
 ## FIRST STAGE ##
 FROM base_image AS builder
@@ -9,17 +12,18 @@ ENV UV_PYTHON_DOWNLOADS=0
 
 WORKDIR /app
 
-# give the app access to our pipenv installed packages
+# Resolve base-provided packages from the system instead of reinstalling them.
 RUN uv venv --system-site-packages
-
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --locked --no-install-project --no-dev
+    SKIP=$(uv pip freeze --system | sed -E 's/[[:space:]@=].*//; s/^/--no-install-package /' | tr '\n' ' ') && \
+    uv sync --locked --no-install-project --no-dev $SKIP
 
 COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev
+    SKIP=$(uv pip freeze --system | sed -E 's/[[:space:]@=].*//; s/^/--no-install-package /' | tr '\n' ' ') && \
+    uv sync --locked --no-dev $SKIP
 
 
 ## SECOND STAGE ##
