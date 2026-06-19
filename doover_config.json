@@ -107,9 +107,11 @@
                         "null"
                     ],
                     "x-required": false,
-                    "description": "How often the app samples the latest reading and updates the tags and UI, in Hz. The TF03 streams at 100 Hz, so this is limited only by the Doover client - up to ~20 Hz works well for live mode. Higher values are capped at 20 Hz.",
-                    "default": 1.0,
-                    "x-position": 5
+                    "description": "How often the main loop processes captured frames and updates the tags/UI, in Hz. The TF03 streams at 100 Hz and every frame is read and fed to drop detection regardless; this only sets the publish rate. 10 Hz is a good default; valid range is 0-100 Hz.",
+                    "default": 10.0,
+                    "x-position": 5,
+                    "exclusiveMinimum": 0,
+                    "maximum": 100
                 },
                 "mounting_offset_metres": {
                     "title": "Mounting Offset Metres",
@@ -150,13 +152,81 @@
                     "default": 100.0,
                     "x-position": 8
                 },
+                "enable_drop_detection": {
+                    "title": "Enable Drop Detection",
+                    "x-name": "enable_drop_detection",
+                    "x-hidden": false,
+                    "type": [
+                        "boolean",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "(Serial mode) Detect sudden downward movements ('drops') from the 100 Hz stream and log them to the tf03_drop_events channel.",
+                    "default": true,
+                    "x-position": 9
+                },
+                "drop_increases_distance": {
+                    "title": "Drop Increases Distance",
+                    "x-name": "drop_increases_distance",
+                    "x-hidden": false,
+                    "type": [
+                        "boolean",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Direction convention: True if a drop makes the measured distance INCREASE (e.g. sensor fixed overhead looking down at the car), False if a drop makes it DECREASE (e.g. sensor on the car looking at a fixed reference).",
+                    "default": true,
+                    "x-position": 10
+                },
+                "drop_velocity_threshold_mps": {
+                    "title": "Drop Velocity Threshold Mps",
+                    "x-name": "drop_velocity_threshold_mps",
+                    "x-hidden": false,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Downward speed in metres/second above which movement is treated as a potential drop. Set above the hoist's normal controlled lowering speed.",
+                    "default": 0.5,
+                    "x-position": 11,
+                    "exclusiveMinimum": 0
+                },
+                "minimum_drop_magnitude_m": {
+                    "title": "Minimum Drop Magnitude (m)",
+                    "x-name": "minimum_drop_magnitude_m",
+                    "x-hidden": false,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Drops smaller than this are ignored as jitter and not logged.",
+                    "default": 0.1,
+                    "x-position": 12,
+                    "exclusiveMinimum": 0
+                },
+                "drop_persistence_frames": {
+                    "title": "Drop Persistence Frames",
+                    "x-name": "drop_persistence_frames",
+                    "x-hidden": false,
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Consecutive frames the velocity threshold must be exceeded before a drop is armed (rejects single-frame glitches). ~3 frames is ~30 ms at 100 Hz.",
+                    "default": 3,
+                    "x-position": 13,
+                    "minimum": 1
+                },
                 "modbus_config": {
                     "title": "Modbus Config",
                     "x-name": "modbus_config",
                     "x-hidden": false,
                     "type": "object",
                     "x-required": true,
-                    "x-position": 9,
+                    "x-position": 14,
                     "properties": {
                         "bus_type": {
                             "enum": [
@@ -322,7 +392,7 @@
                     "x-required": false,
                     "description": "Position of Application in UI Structure. Smaller numbers are closer to the top.",
                     "default": 100,
-                    "x-position": 10,
+                    "x-position": 15,
                     "minimum": 0
                 }
             },

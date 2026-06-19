@@ -1,4 +1,4 @@
-from pydoover.tags import Boolean, Number, Tags
+from pydoover.tags import Boolean, Delta, Number, Tags
 
 
 class BenewakeTF03Tags(Tags):
@@ -12,6 +12,12 @@ class BenewakeTF03Tags(Tags):
     # comms are lost. ``live`` so a watching UI gets fresh values each loop
     # rather than waiting for a periodic flush.
     distance_m = Number(default=None, live=True)
+
+    # Descent velocity in m/s (positive = hoist moving down), derived from the
+    # 100 Hz stream. ``live`` for the UI; ``log_on`` Delta persists a coarse
+    # trail whenever it swings by >=0.5 m/s so fast movement is captured even
+    # between formal drop events (which go to the tf03_drop_events channel).
+    velocity_mps = Number(default=None, live=True, log_on=[Delta(amount=0.5)])
 
     # Supporting diagnostics.
     distance_raw_cm = Number(default=None)

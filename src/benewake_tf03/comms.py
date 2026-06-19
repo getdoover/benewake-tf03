@@ -11,6 +11,7 @@ See the TF03 Series User Manual, "UART, RS485, RS232 Communication / Data Frame"
 import logging
 import threading
 import time
+from collections import deque
 
 try:
     import serial
@@ -22,6 +23,11 @@ log = logging.getLogger(__name__)
 FRAME_HEADER = 0x59
 FRAME_LEN = 9
 MAX_BUFFER = 512
+
+# Bound on frames buffered between drain() calls. ~2.5 s at 100 Hz - enough to
+# survive a stalled main loop while dropping the oldest frames under backpressure
+# rather than growing without bound.
+MAX_FRAMES = 256
 
 
 def parse_frames(buf: bytearray) -> list[tuple[int, int]]:
@@ -59,21 +65,23 @@ def parse_frames(buf: bytearray) -> list[tuple[int, int]]:
 class SerialReader:
     """Background reader for the TF03's native RS485/UART streaming output.
 
-    A daemon thread continuously reads the serial stream and keeps the most
-    recent valid frame; :meth:`read` samples it from the async main loop without
-    blocking. The thread reconnects automatically if the port drops.
+    A daemon thread continuously reads the serial stream and accumulates *every*
+    valid frame (each stamped with monotonic + wall-clock time on arrival);
+    :meth:`drain` hands the whole batch to the async main loop without blocking,
+    so no frames are lost to a slower loop rate. The thread reconnects
+    automatically if the port drops.
 
     ``port`` may be any pyserial URL - a device path (``/dev/ttyAMA0``,
     ``/dev/ttyUSB0``) or a URL handler such as ``socket://host:port`` (handy for
     the simulator and tests).
     """
 
-    def __init__(self, port: str, baud: int, max_age: float = 5.0):
+    def __init__(self, port: str, baud: int):
         self.port = port
         self.baud = baud
-        self.max_age = max_age
         self._serial = None
-        self._latest: tuple[int, int, float] | None = None
+        # (distance_cm, strength, t_mono, t_wall), oldest first.
+        self._frames: deque[tuple[int, int, float, float]] = deque(maxlen=MAX_FRAMES)
         self._lock = threading.Lock()
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
@@ -96,16 +104,18 @@ class SerialReader:
             except Exception:
                 pass
 
-    def read(self) -> tuple[int, int] | None:
-        """Return the most recent ``(distance_cm, strength)`` if fresh, else None."""
+    def drain(self) -> list[tuple[int, int, float, float]]:
+        """Return and clear all frames buffered since the last call.
+
+        Each frame is ``(distance_cm, strength, t_mono, t_wall)``, oldest first:
+        ``t_mono`` (``time.monotonic``) for velocity maths, ``t_wall``
+        (``time.time``) for event timestamps. Returns an empty list if no frames
+        have arrived - the caller treats that as a missed read.
+        """
         with self._lock:
-            latest = self._latest
-        if latest is None:
-            return None
-        distance_cm, strength, ts = latest
-        if time.time() - ts > self.max_age:
-            return None
-        return distance_cm, strength
+            batch = list(self._frames)
+            self._frames.clear()
+        return batch
 
     def _open(self) -> None:
         self._serial = serial.serial_for_url(
@@ -132,9 +142,12 @@ class SerialReader:
                 buf.extend(data)
                 frames = parse_frames(buf)
                 if frames:
-                    distance_cm, strength = frames[-1]  # keep the freshest
+                    # All frames in this read arrived together; stamp once.
+                    t_mono = time.monotonic()
+                    t_wall = time.time()
                     with self._lock:
-                        self._latest = (distance_cm, strength, time.time())
+                        for distance_cm, strength in frames:
+                            self._frames.append((distance_cm, strength, t_mono, t_wall))
                 if len(buf) > MAX_BUFFER:
                     del buf[:-FRAME_LEN]
             except Exception as e:

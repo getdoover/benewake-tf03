@@ -62,12 +62,14 @@ class BenewakeTF03Config(config.Schema):
 
     update_rate_hz = config.Number(
         "Update Rate Hz",
-        default=1.0,
+        default=10.0,
+        exclusive_minimum=0,
+        maximum=100,
         description=(
-            "How often the app samples the latest reading and updates the tags "
-            "and UI, in Hz. The TF03 streams at 100 Hz, so this is limited only "
-            "by the Doover client - up to ~20 Hz works well for live mode. "
-            "Higher values are capped at 20 Hz."
+            "How often the main loop processes captured frames and updates the "
+            "tags/UI, in Hz. The TF03 streams at 100 Hz and every frame is read "
+            "and fed to drop detection regardless; this only sets the publish "
+            "rate. 10 Hz is a good default; valid range is 0-100 Hz."
         ),
     )
 
@@ -95,6 +97,60 @@ class BenewakeTF03Config(config.Schema):
         description=(
             "Distances above this are treated as 'no target' / over-range. "
             "The TF03-100 measuring range is 100 m."
+        ),
+    )
+
+    # --- Drop detection (serial mode) ---
+    # The TF03 streams at 100 Hz; every frame is fed to a detector that flags a
+    # sudden downward movement of the hoist and reports it on the
+    # tf03_drop_events channel. Only active in serial mode (Modbus polling is too
+    # slow to characterise a transient drop).
+    enable_drop_detection = config.Boolean(
+        "Enable Drop Detection",
+        default=True,
+        description=(
+            "(Serial mode) Detect sudden downward movements ('drops') from the "
+            "100 Hz stream and log them to the tf03_drop_events channel."
+        ),
+    )
+
+    drop_distance_increases = config.Boolean(
+        "Drop Increases Distance",
+        default=True,
+        description=(
+            "Direction convention: True if a drop makes the measured distance "
+            "INCREASE (e.g. sensor fixed overhead looking down at the car), "
+            "False if a drop makes it DECREASE (e.g. sensor on the car looking "
+            "at a fixed reference)."
+        ),
+    )
+
+    drop_velocity_threshold_mps = config.Number(
+        "Drop Velocity Threshold Mps",
+        default=0.5,
+        exclusive_minimum=0,
+        description=(
+            "Downward speed in metres/second above which movement is treated as "
+            "a potential drop. Set above the hoist's normal controlled lowering "
+            "speed."
+        ),
+    )
+
+    min_drop_magnitude_m = config.Number(
+        "Minimum Drop Magnitude (m)",
+        default=0.10,
+        exclusive_minimum=0,
+        description=("Drops smaller than this are ignored as jitter and not logged."),
+    )
+
+    drop_persistence_frames = config.Integer(
+        "Drop Persistence Frames",
+        default=3,
+        minimum=1,
+        description=(
+            "Consecutive frames the velocity threshold must be exceeded before "
+            "a drop is armed (rejects single-frame glitches). ~3 frames is "
+            "~30 ms at 100 Hz."
         ),
     )
 
