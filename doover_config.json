@@ -506,7 +506,7 @@
                 }
             }
         },
-        "icon_url": null,
+        "icon_url": "https://cdn.jsdelivr.net/gh/getdoover/app-icons@f6ca20eca2c2d1e05184cb06bf6fee951bba40e7/icons/benewake.jpg",
         "banner_url": null,
         "build_widget_command": null,
         "export_config_command": null,
